@@ -9,6 +9,7 @@ import (
 
 	"example.com/hexagonal-auth/domain"
 	"example.com/hexagonal-auth/service"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )

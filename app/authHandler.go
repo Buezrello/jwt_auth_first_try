@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -20,12 +19,11 @@ func (h AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error while decoding login request: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
-		token, err := h.service.Login(loginRequest)
-		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, err.Error())
+		token, appErr := h.service.Login(loginRequest)
+		if appErr != nil {
+			writeResponse(w, appErr.Code, appErr.AsMessage())
 		} else {
-			fmt.Fprint(w, *token)
+			writeResponse(w, http.StatusOK, *token)
 		}
 	}
 }
@@ -36,4 +34,12 @@ func (h AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 func (h AuthHandler) NotImplemented(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func writeResponse(w http.ResponseWriter, code int, data interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		panic(err)
+	}
 }

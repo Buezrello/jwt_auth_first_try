@@ -2,11 +2,11 @@ package domain
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	"strings"
 	"time"
 
+	"example.com/hexagonal-auth/errs"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -19,7 +19,7 @@ type Login struct {
 	Role       string         `db:"role"`
 }
 
-func (l Login) GenerateToken() (*string, error) {
+func (l Login) GenerateToken() (*string, *errs.AppError) {
 	var claims jwt.MapClaims
 	if l.Accounts.Valid && l.CustomerId.Valid {
 		claims = l.claimsForUser()
@@ -31,7 +31,7 @@ func (l Login) GenerateToken() (*string, error) {
 	signedTokenAsString, err := token.SignedString([]byte(HMAC_SAMPLE_SECRET))
 	if err != nil {
 		log.Println("Failed while signing token: " + err.Error())
-		return nil, errors.New("cannot generate token")
+		return nil, errs.NewTokenError("cannot generate token")
 	}
 	return &signedTokenAsString, nil
 }

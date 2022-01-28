@@ -3,10 +3,11 @@ package service
 import (
 	"example.com/hexagonal-auth/domain"
 	"example.com/hexagonal-auth/dto"
+	"example.com/hexagonal-auth/errs"
 )
 
 type AuthService interface {
-	Login(dto.LoginRequest) (*dto.LoginResponse, error)
+	Login(dto.LoginRequest) (*dto.LoginResponse, *errs.AppError)
 }
 
 type DefaultAuthService struct {
@@ -14,15 +15,19 @@ type DefaultAuthService struct {
 	rolePermissions domain.RolePermissions
 }
 
-func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
-	login, err := s.repo.FindBy(req.Username, req.Password)
-	if err != nil {
-		return nil, err
+func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
+	var appErr *errs.AppError
+	var login *domain.Login
+	var token *string
+
+	if login, appErr = s.repo.FindBy(req.Username, req.Password); appErr != nil {
+		return nil, appErr
 	}
-	token, err := login.GenerateToken()
-	if err != nil {
-		return nil, err
+
+	if token, appErr = login.GenerateToken(); appErr != nil {
+		return nil, appErr
 	}
+
 	return &dto.LoginResponse{AccessToken: *token}, nil
 }
 
